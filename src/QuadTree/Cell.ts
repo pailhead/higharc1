@@ -1,7 +1,5 @@
 import { getChildren } from '@mapbox/tilebelt'
-import { Vector4, Vector2, Mesh, MeshBasicMaterial, Group } from 'three'
-import { Box2Viz } from '../Box2Viz/Box2Viz'
-import { SharedGeometry } from '../Shared/SharedGeometry'
+import { Vector4, Vector2, Group } from 'three'
 
 interface ITraversal {
   stopPropagation: boolean
@@ -22,18 +20,12 @@ const DIR = [
 
 export class Cell {
   public readonly level: number
-  public readonly boundingBox = new Box2Viz('#ff0000')
   public readonly size = new Vector4()
   public readonly center = new Vector2()
-  public readonly debugSphere = new Mesh(
-    SharedGeometry.sphereHi,
-    new MeshBasicMaterial({ color: 'blue', opacity: 0.25, transparent: true }),
-  )
 
   parent: Cell | null = null
 
   private _children: Cell[] | null = null
-  private _radius = 0
 
   constructor(
     public readonly tile: number[],
@@ -41,10 +33,6 @@ export class Cell {
     private _rootObject: Group,
   ) {
     this.level = level
-    // this._rootObject.add(this.boundingBox)
-    // this._rootObject.add(this.debugSphere)
-    this.boundingBox.layers.enable(2)
-    this.debugSphere.layers.enable(2)
   }
 
   get isRoot() {
@@ -53,10 +41,6 @@ export class Cell {
 
   get children() {
     return this._children
-  }
-
-  get radius() {
-    return this._radius
   }
 
   getAncestors() {
@@ -69,11 +53,6 @@ export class Cell {
       parent = parent.parent
     }
     return res
-  }
-
-  setVisible(visible: boolean) {
-    this.boundingBox.visible = visible
-    this.debugSphere.visible = visible
   }
 
   split() {
@@ -101,16 +80,11 @@ export class Cell {
 
   setSize(x: number, y: number, width: number, height: number) {
     this.size.set(x, y, width, height)
-    this.boundingBox.setPosition(x, y)
-    this.boundingBox.setSize(width, height)
     const wh = width * 0.5
     const hh = height * 0.5
     this.center.set(x, y)
     this.center.x += wh
     this.center.y += hh
-    this._radius = Math.max(wh, hh)
-    this.debugSphere.position.set(this.center.x, 0, this.center.y)
-    this.debugSphere.scale.set(this._radius, this._radius, this._radius)
   }
 
   getSiblings(target: Cell[] = []) {

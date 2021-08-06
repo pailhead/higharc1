@@ -5,7 +5,8 @@ import {
   Texture,
   UnsignedByteType,
 } from 'three'
-import { MAPBOX_API, MAPBOX_KEY, MAX_LEVEL } from '../constants'
+
+import { MAPBOX_API, MAPBOX_KEY, MAX_LEVEL } from '~/constants'
 
 export interface ITileResult {
   texture: Texture
@@ -56,21 +57,3 @@ class _MapboxClient {
 }
 
 export const MapboxClient = new _MapboxClient()
-
-// const getTileSizeKM = (bbox: number[]): ITileSize => {
-//   const b = bbox.map((v) => (v * Math.PI) / 180)
-//   // console.log(bbox)
-//   const angleWidth = b[2] - b[0]
-//   const angleHeight = b[3] - b[1]
-//   const wbottom = angleWidth * Math.cos(b[1])
-//   const wtop = angleWidth * Math.cos(b[3])
-//   const heightKM = angleHeight * EARTH_R_KM
-//   const bottomWidthKM = wbottom * EARTH_R_KM
-//   const topWidthKM = wtop * EARTH_R_KM
-//   // console.log('offset', offset)
-//   return {
-//     heightKM,
-//     bottomWidthKM,
-//     topWidthKM,
-//   }
-// }

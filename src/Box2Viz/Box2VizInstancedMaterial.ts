@@ -1,4 +1,5 @@
 import { ShaderMaterial } from 'three'
+
 import vertexShader from './boxInstanced.vert'
 import fragmentShader from './boxInstanced.frag'
 

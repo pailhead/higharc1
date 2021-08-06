@@ -1,6 +1,8 @@
 import { Mesh, Texture, Vector4, WebGLRenderTarget } from 'three'
-import { TEXTURE_SIZE } from '../constants'
-import { SharedGeometry } from '../Shared/SharedGeometry'
+
+import { TEXTURE_SIZE } from '~/constants'
+import { SharedGeometry } from '~/Shared/SharedGeometry'
+
 import { MapTileMaterial } from './MapTileMaterial'
 
 export class MapTile extends Mesh {

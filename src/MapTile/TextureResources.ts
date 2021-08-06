@@ -12,7 +12,6 @@ export const getTileKey = (tile: number[]) => tile.join(':')
 class _TextureResources {
   private _cache: Map<string, TileTexture> = new Map()
   private _pending: Map<TileTexture, boolean> = new Map()
-  private _active: Map<TileTexture, boolean> = new Map()
   private _inactive: Map<TileTexture, boolean> = new Map()
 
   createTexture(tile: number[], fixed = false) {

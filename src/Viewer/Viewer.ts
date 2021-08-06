@@ -37,6 +37,7 @@ export class Viewer extends EventDispatcher {
     this.scene.add(this.camera)
     this.renderer.autoClear = false
     this.renderer.outputEncoding = LinearEncoding
+    this.renderer.localClippingEnabled = true
     document.body.appendChild(this.renderer.domElement)
     document.body.style.margin = '0px'
 

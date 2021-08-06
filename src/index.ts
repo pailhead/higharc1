@@ -5,7 +5,7 @@ import { Viewer, ViewerEvents } from './Viewer/Viewer'
 import { Controls } from './Viewer/Controls'
 import { MapViz } from './Viewer/MapViz'
 import { DynamicMap } from './Map/DynamicMap'
-import { getEarthBB, getSaneEarth, lonLatToKM } from './Api/tileUtils'
+import { getEarthBB, getSaneEarth, lonLatToKM } from './utils'
 import { PointOfInterestViz } from './Shared/PointOfInterestViz'
 
 import {
@@ -56,13 +56,6 @@ viewer.scene.add(dynamicMap.boxInstanced)
 const pointOfInterest = new PointOfInterestViz()
 viewer.scene.add(pointOfInterest)
 
-// const dir = [
-//   [0, 1],
-//   [1, 1],
-//   [1, 0],
-//   [0, 0],
-// ]
-
 const updatePoint = () => {
   pointOfInterest.position.copy(lonLatToKM(guiState.lon, guiState.lat))
 }
@@ -79,8 +72,11 @@ viewer.addEventListener(ViewerEvents.WillRender, () => {
   countEl!.innerHTML = `count: ${visible.length}`
 })
 
-gui.add(guiState, 'lon', -180, 180).onChange(updatePoint)
-gui.add(guiState, 'lat', earthSize.x, earthSize.z).onChange(updatePoint)
+gui.add(guiState, 'lon', -180, 180).onChange(updatePoint).step(0.001)
+gui
+  .add(guiState, 'lat', earthSize.x, earthSize.z)
+  .onChange(updatePoint)
+  .step(0.001)
 gui.add(guiState, 'goTo').onChange(onGoto)
 gui.add(guiState, 'maxCell', MIN_TILES, MAX_TILES).step(1)
 gui.add(guiState, 'cellBias', MIN_CELL_BIAS, MAX_CELL_BIAS).step(1)

@@ -1,5 +1,6 @@
 import { Line, LineBasicMaterial } from 'three'
-import { SharedGeometry } from '../Shared/SharedGeometry'
+
+import { SharedGeometry } from '~/Shared/SharedGeometry'
 
 export class Box2Viz extends Line {
   constructor(color = '#ff0000') {

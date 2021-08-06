@@ -1,6 +1,8 @@
 import { tileToBBOX } from '@mapbox/tilebelt'
 import { Group, Vector3 } from 'three'
-import { lonLatToKM } from '../Api/tileUtils'
+
+import { lonLatToKM } from '~/utils'
+
 import { Cell } from './Cell'
 
 export class QuadTree {

@@ -1,5 +1,5 @@
 import { EventDispatcher, Texture } from 'three'
-import { ITileResult, MapboxClient } from '../Api/MapboxClient'
+import { MapboxClient } from '~/Api/MapboxClient'
 
 export enum TileTextureEvents {
   Loaded = 'LOADED',

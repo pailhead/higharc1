@@ -4,7 +4,7 @@ import {
   PlaneBufferGeometry,
   SphereBufferGeometry,
 } from 'three'
-import { TEXTURE_SIZE } from '../constants'
+import { TEXTURE_SIZE } from '~/constants'
 
 const SEG_COUNT = TEXTURE_SIZE - 1
 

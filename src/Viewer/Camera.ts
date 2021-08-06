@@ -1,9 +1,5 @@
 import {
-  BufferAttribute,
-  BufferGeometry,
   Line3,
-  Mesh,
-  MeshBasicMaterial,
   PerspectiveCamera,
   Plane,
   Ray,
@@ -12,22 +8,7 @@ import {
   Vector4,
 } from 'three'
 import { degToRad } from 'three/src/math/MathUtils'
-
-const position = [
-  ...[0, 0, 0],
-  ...[1, 1, 1], //0
-  ...[-1, 1, 1],
-  ...[-1, -1, 1],
-  ...[1, -1, 1],
-]
-const indices = [
-  ...[0, 1, 2],
-  ...[0, 2, 3],
-  ...[0, 3, 4],
-  ...[0, 4, 1],
-  ...[1, 2, 3],
-  ...[1, 4, 3],
-]
+import { VisibleAreaViz } from './VisibleAreaViz'
 
 const WORK_VEC4 = new Vector4()
 
@@ -38,27 +19,16 @@ const WORK_VEC4 = new Vector4()
 
 export class Camera extends PerspectiveCamera {
   //for viz
-  private _geometry = new BufferGeometry()
   //for intersection
   private _planes = [new Plane(), new Plane(), new Plane(), new Plane()]
   private _sizeHalf = new Vector2()
 
-  public readonly mesh = new Mesh(
-    this._geometry,
-    new MeshBasicMaterial({ color: 'red', transparent: true, opacity: 0.25 }),
-  )
+  private _visibleArea = new VisibleAreaViz()
 
   constructor() {
     super(60, 1, 0.1, 40000)
-    this.add(this.mesh)
-
-    this.mesh.layers.set(2)
-    this._geometry.setAttribute(
-      'position',
-      new BufferAttribute(new Float32Array(position), 3),
-    )
-    this.mesh.frustumCulled = false
-    this._geometry.setIndex(new BufferAttribute(new Uint8Array(indices), 1))
+    this.add(this._visibleArea)
+    this._visibleArea.rotation.x = Math.PI
   }
 
   /**
@@ -67,13 +37,12 @@ export class Camera extends PerspectiveCamera {
    */
   updateProjectionMatrix() {
     super.updateProjectionMatrix()
-    if (!this.mesh) return
-    this._updateGeometry()
     const { fov } = this
     const fovr = degToRad(fov / 2)
     const hh = Math.tan(fovr)
     const wh = hh * this.aspect
-    this._sizeHalf.set(wh, hh)
+    this._sizeHalf?.set(wh, hh)
+    this._visibleArea?.update(this)
   }
 
   /**
@@ -91,6 +60,7 @@ export class Camera extends PerspectiveCamera {
   /**
    * intersectCamera with a tile rect
    * @param worldRect
+   * @param result write vector3 intersections here
    * @returns true if there is an intersection
    */
   intersectWorldRect = (() => {
@@ -203,21 +173,5 @@ export class Camera extends PerspectiveCamera {
       WORK_VEC4 as never,
       this.position,
     )
-  }
-
-  private _updateGeometry() {
-    const { fov } = this
-    const fovr = degToRad(fov / 2)
-    const hh = Math.tan(fovr)
-    const wh = hh * this.aspect
-
-    for (let i = 1; i < 5; i++) {
-      const i3 = i * 3
-      const x = position[i3] * wh * this.far
-      const y = position[i3 + 1] * hh * this.far
-      const z = -this.far
-      this._geometry.getAttribute('position').setXYZ(i, x, y, z)
-    }
-    this._geometry.getAttribute('position').needsUpdate = true
   }
 }

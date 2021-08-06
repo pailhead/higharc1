@@ -6,7 +6,8 @@ import {
   Vector2,
   Vector4,
 } from 'three'
-import { lonLatToKM } from '../Api/tileUtils'
+
+import { lonLatToKM } from '~/utils'
 
 const WORK_VEC = new Vector2()
 
@@ -32,7 +33,7 @@ export class MapViz {
       50000,
     )
     camera.position.x = (min.z + max.z) * 0.5
-    camera.position.y = 40000
+    camera.position.y = 100
     camera.rotation.x = -Math.PI / 2
     camera.rotation.z = -Math.PI / 2
     camera.layers.set(2)

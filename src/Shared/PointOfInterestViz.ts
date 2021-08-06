@@ -1,4 +1,5 @@
 import { AxesHelper, Group, Mesh, MeshBasicMaterial } from 'three'
+
 import { SharedGeometry } from './SharedGeometry'
 
 export class PointOfInterestViz extends Group {

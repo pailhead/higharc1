@@ -6,8 +6,10 @@ import {
   Line,
   Vector4,
 } from 'three'
-import { MAX_TILES } from '../constants'
-import { SharedGeometry } from '../Shared/SharedGeometry'
+
+import { MAX_TILES } from '~/constants'
+import { SharedGeometry } from '~/Shared/SharedGeometry'
+
 import { Box2VizInstancedMaterial } from './Box2VizInstancedMaterial'
 
 export class Box2VizInstanced extends Line {

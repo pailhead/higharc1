@@ -6,22 +6,21 @@ import {
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
-  PlaneBufferGeometry,
   Scene,
-  ShaderMaterial,
   Vector3,
   Vector4,
   WebGLRenderTarget,
 } from 'three'
 import { degToRad } from 'three/src/math/MathUtils'
-import { Box2VizInstanced } from '../Box2Viz/Box2VizInstanced'
-import { MAX_LEVEL, MAX_TILES, START_LEVEL } from '../constants'
-import { MapTile } from '../MapTile/MapTile'
-import { getTileKey, TextureResources } from '../MapTile/TextureResources'
-import { Cell } from '../QuadTree/Cell'
-import { QuadTree } from '../QuadTree/Quad'
-import { SharedGeometry } from '../Shared/SharedGeometry'
-import { Viewer, ViewerEvents } from '../Viewer/Viewer'
+import { Box2VizInstanced } from '~/Box2Viz/Box2VizInstanced'
+import { MAX_LEVEL, MAX_TILES, START_LEVEL } from '~/constants'
+import { MapTile } from '~/MapTile/MapTile'
+import { getTileKey, TextureResources } from '~/MapTile/TextureResources'
+import { Cell } from '~/QuadTree/Cell'
+import { QuadTree } from '~/QuadTree/Quad'
+import { SharedGeometry } from '~/Shared/SharedGeometry'
+import { projectRadius } from '~/utils'
+import { Viewer, ViewerEvents } from '~/Viewer/Viewer'
 
 const MAX_DEPTH = MAX_LEVEL - START_LEVEL
 const INV_255 = 1 / 255
@@ -32,35 +31,6 @@ for (let i = 0; i < 16; i++) WORK_INTERSECT_RESULT.push(new Vector3())
 /**
  * zoom tile manager
  */
-
-const debug = new Mesh(
-  new PlaneBufferGeometry(1, 1, 1, 1).translate(0.5, 0.5, 0),
-  new ShaderMaterial({
-    vertexShader: `
-      varying vec2 vUv;
-      void main(){
-        vUv = uv;
-        vec2 p = position.xy;
-        p*=0.5;
-        p.x+=0.5;
-        p.y-=1.;
-        gl_Position = vec4(p,0.,1.);
-      }
-    `,
-    fragmentShader: `
-    varying vec2 vUv;
-    uniform sampler2D uTexture;
-    void main(){
-      gl_FragColor = texture2D(uTexture,vUv);
-    }
-    `,
-    uniforms: {
-      uTexture: { value: null },
-    },
-  }),
-)
-debug.frustumCulled = false
-debug.renderOrder = 9999
 
 export class DynamicMap {
   public readonly boxInstanced = new Box2VizInstanced()
@@ -75,7 +45,6 @@ export class DynamicMap {
 
   private _tileScene = new Scene()
   private _maskScene = new Scene()
-  private _debugScene = new Scene()
   private _maskMesh = new Mesh(
     SharedGeometry.simplePlane,
     new MeshBasicMaterial({
@@ -109,8 +78,6 @@ export class DynamicMap {
     this._maskScene.autoUpdate = false
     this._maskScene.add(this._maskMesh)
 
-    this._debugScene.add(debug)
-
     _viewer.addEventListener(ViewerEvents.Resize, () =>
       this.setSize(_viewer.size.x, _viewer.size.y),
     )
@@ -126,13 +93,11 @@ export class DynamicMap {
     })
     this._maskUniform.value = this._renderTarget
     this._screenSizeUniform.value.set(width, height, 1 / width, 1 / height)
-    // ;(debug.material as any).uniforms.uTexture.value =
-    //   this._renderTarget.texture
   }
 
   render(maxCells: number, bias: number) {
     const { _viewer } = this
-    const { renderer, camera } = _viewer
+    const { renderer } = _viewer
     const visible = this._getVisibleCells(bias)
     visible.sort(this._sortDistance)
     visible.sort(this._sortLevel)
@@ -149,7 +114,6 @@ export class DynamicMap {
     renderer.setRenderTarget(null)
     while (this._tileQueue.length) this._renderTile(this._tileQueue.shift()!)
 
-    renderer.render(this._debugScene, camera)
     return visible
   }
 
@@ -239,7 +203,7 @@ export class DynamicMap {
         rpx = Infinity
         break
       }
-      const rp = this._projectRadius(tilePixelSize, dEye, fovInv, heightHalf)
+      const rp = projectRadius(tilePixelSize, dEye, fovInv, heightHalf)
       rpx = Math.max(rp, rpx)
     }
     return rpx
@@ -250,7 +214,6 @@ export class DynamicMap {
    */
   private _sortDistance = (() => {
     const WORK_VEC3 = new Vector3()
-
     return (a: Cell, b: Cell) => {
       const { camera } = this._viewer
       WORK_VEC3.set(a.center.x, 0, a.center.y)
@@ -260,6 +223,7 @@ export class DynamicMap {
       return da - db
     }
   })()
+
   private _sortLevel = (a: Cell, b: Cell) => {
     return b.level - a.level
   }
@@ -284,18 +248,6 @@ export class DynamicMap {
       this.boxInstanced.setCount(Math.min(maxCells, visible.length))
     }
   })()
-
-  private _projectRadius(
-    radius: number,
-    dEye: number,
-    fovInv: number,
-    heightHalf: number,
-  ) {
-    const r = radius
-    const l = Math.sqrt(dEye * dEye - r * r)
-    const projected = (fovInv * r) / l
-    return projected * heightHalf
-  }
 
   private _updateTiles(visible: Cell[]) {
     const queue = this._updateQueue

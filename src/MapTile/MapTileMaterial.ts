@@ -8,9 +8,10 @@ import {
   WebGLRenderTarget,
 } from 'three'
 
+import { TEXTURE_SIZE } from '~/constants'
+
 import vertexShader from './mapTile.vert'
 import fragmentShader from './mapTile.frag'
-import { TEXTURE_SIZE } from '../constants'
 
 export class MapTileMaterial extends ShaderMaterial {
   constructor(

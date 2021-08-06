@@ -1,7 +1,8 @@
 import { getChildren, tileToBBOX } from '@mapbox/tilebelt'
 import { Vector3, Vector4 } from 'three'
 import { degToRad } from 'three/src/math/MathUtils'
-import { EARTH_R_KM, START_LEVEL } from '../constants'
+
+import { EARTH_R_KM, START_LEVEL } from '~/constants'
 
 /**
  * convert lon lat to three's space in kilometers
@@ -86,4 +87,16 @@ export const getEarthBB = (earth: {
   earth.divisibleEarthTiles.forEach(check)
   earth.staticEarthTiles.forEach(check)
   return new Vector4(minx, miny, maxx, maxy)
+}
+
+export const projectRadius = (
+  radius: number,
+  dEye: number,
+  fovInv: number,
+  heightHalf: number,
+) => {
+  const r = radius
+  const l = Math.sqrt(dEye * dEye - r * r)
+  const projected = (fovInv * r) / l
+  return projected * heightHalf
 }
