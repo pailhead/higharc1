@@ -41,7 +41,7 @@ vec3 getNormal(vec2 point){
   vec2 foo = uTileSize;
   foo *= uTextureSize.y;
 
-  return vec3(-dzdx,2.*uTileSize.x*uTextureSize.y,-dzdy);
+  return vec3(-dzdy,2.*uTileSize.x*uTextureSize.y,dzdx);
 }
 
 

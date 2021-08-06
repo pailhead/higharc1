@@ -1,7 +1,7 @@
 export const TEXTURE_SIZE = 256
 export const START_LEVEL = 2
 export const MAX_LEVEL = 15
-export const SAN_FRANCISCO = [-122.44487240343483, 37.7566054534623]
+export const SAN_FRANCISCO = [-122.44487240343483, 30.148] //off by a lot
 
 export const MAPBOX_API = 'https://api.mapbox.com/v4/mapbox.terrain-rgb'
 export const MAPBOX_KEY =
