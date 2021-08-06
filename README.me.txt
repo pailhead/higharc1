@@ -1,0 +1,1 @@
+zoom level 1 really weird, 1/3 ratio
