@@ -11,7 +11,7 @@ export const EQUATOR_M = 40075016.686
 export const EARTH_R_KM = EQUATOR_M / Math.PI / 2 / 1000
 
 export const MIN_TILES = 8
-export const MAX_TILES = 32
+export const MAX_TILES = 64
 
 export const MIN_CELL_BIAS = 4
 export const MAX_CELL_BIAS = 256

@@ -13,9 +13,6 @@ uniform sampler2D uTexture;
 uniform sampler2D uMaskTexture;
 
 void main () {
-	vec3 fdx = vec3( dFdx( vViewPosition.x ), dFdx( vViewPosition.y ), dFdx( vViewPosition.z ) );
-	vec3 fdy = vec3( dFdy( vViewPosition.x ), dFdy( vViewPosition.y ), dFdy( vViewPosition.z ) );
-	vec3 normal = normalize( cross( fdx, fdy ) );
 
   vec2 maskLookup = vWorldScreen;
   float mask = texture2D(uMaskTexture,maskLookup).x;
@@ -40,5 +37,6 @@ void main () {
     vec3(0.505, 0.607, 0.874) * 0.2 + ndl * vec3(1., 0.768, 0.505) * 0.5 + spec * 0.3,
     1.
   );
-  gl_FragColor.xyz = texture2D(uTexture,vUv).xyz;
+  // gl_FragColor.xyz = texture2D(uTexture,vUv).xyz;
+  // gl_FragColor.x = max(step(vUv.x,uTextureSize.y*10.),step(vUv.y,uTextureSize.y*10.));
 }

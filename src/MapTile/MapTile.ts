@@ -4,9 +4,11 @@ import { TEXTURE_SIZE } from '~/constants'
 import { SharedGeometry } from '~/Shared/SharedGeometry'
 
 import { MapTileMaterial } from './MapTileMaterial'
+import { TileTexture } from './TileTexture'
 
 export class MapTile extends Mesh {
   private _material: MapTileMaterial
+  private _tileTexture: TileTexture | null = null
 
   constructor(
     tileIndex: number,
@@ -35,9 +37,14 @@ export class MapTile extends Mesh {
   setSize(size: Vector4) {
     this.position.set(size.x, 0, size.y)
     this.scale.set(size.z, 1, size.w)
+    this._material.setTileSize(size.z, size.w)
   }
-  setTexture(texture: Texture) {
-    this._material.setTexture(texture)
+  setTexture(texture: TileTexture) {
+    this._tileTexture = texture
+    this._material.setTexture(texture.texture!)
+  }
+  getTexture() {
+    return this._tileTexture
   }
   setLevel(level: number) {
     this._material.setLevel(level)

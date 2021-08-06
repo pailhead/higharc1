@@ -27,6 +27,7 @@ export class MapTileMaterial extends ShaderMaterial {
         },
         uLevel: { value: 0 },
         uTexture: { value: null },
+        uTileSize: { value: new Vector2() },
         uTextureSize: {
           value: new Vector4(
             TEXTURE_SIZE,
@@ -48,7 +49,13 @@ export class MapTileMaterial extends ShaderMaterial {
   setTexture(texture: Texture) {
     this.uniforms.uTexture.value = texture
   }
+  getTexture() {
+    return this.uniforms.uTexture.value
+  }
   setHeightRange(min: number, max: number) {
     this.uniforms.uHeightRange.value.set(min, max)
+  }
+  setTileSize(w: number, h: number) {
+    this.uniforms.uTileSize.value.set(w, h)
   }
 }

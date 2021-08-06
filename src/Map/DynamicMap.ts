@@ -6,7 +6,9 @@ import {
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
+  PlaneBufferGeometry,
   Scene,
+  ShaderMaterial,
   Vector3,
   Vector4,
   WebGLRenderTarget,
@@ -32,6 +34,35 @@ for (let i = 0; i < 16; i++) WORK_INTERSECT_RESULT.push(new Vector3())
  * zoom tile manager
  */
 
+const debug = new Mesh(
+  new PlaneBufferGeometry(1, 1, 1, 1).translate(0.5, 0.5, 0),
+  new ShaderMaterial({
+    vertexShader: `
+      varying vec2 vUv;
+      void main(){
+        vUv = uv;
+        vec2 p = position.xy;
+        p*=0.5;
+        p.x+=0.5;
+        p.y-=1.;
+        gl_Position = vec4(p,0.,1.);
+      }
+    `,
+    fragmentShader: `
+    varying vec2 vUv;
+    uniform sampler2D uTexture;
+    void main(){
+      gl_FragColor = texture2D(uTexture,vUv)*10.;
+    }
+    `,
+    uniforms: {
+      uTexture: { value: null },
+    },
+  }),
+)
+debug.frustumCulled = false
+debug.renderOrder = 9999
+
 export class DynamicMap {
   public readonly boxInstanced = new Box2VizInstanced()
 
@@ -39,10 +70,10 @@ export class DynamicMap {
 
   private _tiles: MapTile[] = []
   private _tileQueue: MapTile[] = []
-  private _updateQueue: Cell[] = []
 
   private _renderTarget: WebGLRenderTarget | null = null
 
+  private _debugScene = new Scene()
   private _tileScene = new Scene()
   private _maskScene = new Scene()
   private _maskMesh = new Mesh(
@@ -73,6 +104,7 @@ export class DynamicMap {
       this._tiles.push(
         new MapTile(i, this._maskUniform, this._screenSizeUniform),
       )
+      this._tileScene.add(this._tiles[i])
     }
 
     this._maskScene.autoUpdate = false
@@ -82,6 +114,7 @@ export class DynamicMap {
       this.setSize(_viewer.size.x, _viewer.size.y),
     )
     this.setSize(_viewer.size.x, _viewer.size.y)
+    this._debugScene.add(debug)
   }
 
   setSize(width: number, height: number) {
@@ -93,27 +126,39 @@ export class DynamicMap {
     })
     this._maskUniform.value = this._renderTarget
     this._screenSizeUniform.value.set(width, height, 1 / width, 1 / height)
+    ;(debug.material as any).uniforms.uTexture.value =
+      this._renderTarget.texture
   }
 
   render(maxCells: number, bias: number) {
+    this._tiles.forEach((tile) => tile.getTexture()?.setActive(false))
     const { _viewer } = this
     const { renderer } = _viewer
-    const visible = this._getVisibleCells(bias)
+    const visible = this._getIdealVisibleCells(bias)
     visible.sort(this._sortDistance)
-    visible.sort(this._sortLevel)
-    if (visible.length > MAX_TILES) visible.splice(MAX_TILES)
+    this._updateTiles(visible, maxCells)
     this._updateInstances(visible, maxCells)
-    this._updateTiles(visible)
+
+    const renderMap: Map<number, MapTile[]> = new Map()
+    let maxLevel = 0
+    for (let i = 0; i < this._tileQueue.length; i++) {
+      const mapTile = this._tiles[i]
+      const tile = mapTile.getTile()!
+      maxLevel = Math.max(maxLevel, tile[2])
+      if (!renderMap.has(tile[2])) renderMap.set(tile[2], [])
+      renderMap.get(tile[2])!.push(mapTile)
+    }
 
     renderer.setRenderTarget(this._renderTarget)
     renderer.clear()
-    this._tileQueue.forEach(this._renderTileMask)
-
-    while (this._tileQueue.length > maxCells) this._tileQueue.shift()
+    while (maxLevel) renderMap.get(maxLevel--)?.forEach(this._renderTileMask)
 
     renderer.setRenderTarget(null)
-    while (this._tileQueue.length) this._renderTile(this._tileQueue.shift()!)
+    renderer.render(this._tileScene, _viewer.camera)
+    while (this._tileQueue.length) this._tileQueue.shift()
+    // while (this._tileQueue.length) this._renderTile(this._tileQueue.shift()!)
 
+    renderer.render(this._debugScene, _viewer.camera)
     return visible
   }
 
@@ -128,22 +173,21 @@ export class DynamicMap {
     renderer.render(this._maskScene, camera)
   }
 
-  private _renderTile(mapTile: MapTile) {
-    const { _viewer, _tileScene } = this
-    const { renderer, camera } = _viewer
+  // private _renderTile(mapTile: MapTile) {
+  //   const { _viewer, _tileScene } = this
+  //   const { renderer, camera } = _viewer
 
-    _tileScene.remove(_tileScene.children[0])
-    _tileScene.add(mapTile)
+  //   _tileScene.remove(_tileScene.children[0])
+  //   _tileScene.add(mapTile)
 
-    renderer.setRenderTarget(null)
-    renderer.render(this._tileScene, camera)
-  }
+  //   renderer.render(this._tileScene, camera)
+  // }
 
   /**
    * divides the map into ideal cells for zoom level
    * @returns
    */
-  private _getVisibleCells(bias: number) {
+  private _getIdealVisibleCells(bias: number) {
     const { camera } = this._viewer
     const heightHalf = this._viewer.size.y * 0.5
     const fovInv = 1 / Math.tan(degToRad(camera.fov / 2))
@@ -194,9 +238,8 @@ export class DynamicMap {
     heightHalf: number,
     tilePixelSize: number,
   ) {
-    let i = intersectCount
     let rpx = -Infinity
-    while (i--) {
+    for (let i = intersectCount - 1; i >= 0; i--) {
       const p = WORK_INTERSECT_RESULT[i]
       const dEye = p.distanceTo(this._viewer.camera.position)
       if (dEye < tilePixelSize) {
@@ -224,10 +267,6 @@ export class DynamicMap {
     }
   })()
 
-  private _sortLevel = (a: Cell, b: Cell) => {
-    return b.level - a.level
-  }
-
   /**
    * update instanced bb rendering
    */
@@ -249,8 +288,7 @@ export class DynamicMap {
     }
   })()
 
-  private _updateTiles(visible: Cell[]) {
-    const queue = this._updateQueue
+  private _updateTiles(visible: Cell[], maxTiles: number) {
     let i = 0
     const visibleMap: Map<Cell, boolean> = new Map()
     const visitedTiles: Record<string, boolean> = {}
@@ -261,40 +299,32 @@ export class DynamicMap {
     })
 
     const p = (cell: Cell) => {
+      if (i >= maxTiles) return
       const key = getTileKey(cell.tile)
       if (visitedTiles[key]) return
       visitedTiles[key] = true
       const { tile } = cell
       const tileTexture = TextureResources.getTexture(tile)
-
       if (tileTexture && !tileTexture?.pending) {
         const mapTile = this._tiles[i++]
         mapTile.setLevel(tile[2])
         mapTile.setTile(tile)
-        mapTile.setTexture(tileTexture.texture!)
+        mapTile.setTexture(tileTexture)
+        tileTexture.setActive(true)
         mapTile.setSize(cell.size)
         mapTile.visible = true
         this._tileQueue.push(mapTile)
         return
       }
 
-      if (visibleMap.has(cell) && !tileTexture?.pending)
+      if (visibleMap.has(cell) && !tileTexture?.pending) {
         TextureResources.createTexture(tile)
+      }
 
-      // if (cell.parent) queue.push(cell.parent)
       if (cell.parent) p(cell.parent)
     }
 
-    while (remaining.length) {
-      let r = remaining[0]
-      const { level } = r
-
-      while (r?.level === level) {
-        queue.push(remaining.shift()!)
-        r = remaining[0]
-      }
-      while (queue.length) p(queue.shift()!)
-    }
+    while (remaining.length && i < maxTiles) p(remaining.shift()!)
 
     while (i < this._tiles.length) this._tiles[i++].visible = false
   }

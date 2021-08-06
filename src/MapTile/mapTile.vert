@@ -1,6 +1,7 @@
 uniform sampler2D uTexture;
 uniform vec4 uTextureSize; //pixel size, inv pixel size, textureScale
 uniform vec2 uHeightRange;
+uniform vec2 uTileSize;
 
 varying vec2 vUv;
 varying vec3 vNormal;
@@ -26,8 +27,9 @@ float height(vec2 point){
 }
 
 vec3 getNormal(vec2 point){
-  float h = height(point);
   float pxOffset = uTextureSize.y;
+  
+  float h = height(point);
 
   float hl = height(vec2(point.x+pxOffset, point.y));
   float hr = height(vec2(point.x-pxOffset, point.y));
@@ -36,7 +38,10 @@ vec3 getNormal(vec2 point){
   float dzdx = hr - hl;
   float dzdy = ht - hb;
 
-  return vec3(-dzdx,2.0,-dzdy);
+  vec2 foo = uTileSize;
+  foo *= uTextureSize.y;
+
+  return vec3(-dzdx,2.*uTileSize.x*uTextureSize.y,-dzdy);
 }
 
 
