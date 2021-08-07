@@ -19,7 +19,7 @@ export interface ITileSize {
 }
 
 export const NULL_TEXTURE = new DataTexture(
-  new Uint8Array([1, 134, 160, 0]),
+  new Uint8Array([1, 134, 150, 0]),
   1,
   1,
   RGBAFormat,
@@ -49,9 +49,17 @@ class _MapboxClient {
         const texture = new Texture(img)
         texture.minFilter = NearestFilter
         texture.magFilter = NearestFilter
-        img.onload = () => (texture.needsUpdate = true)
+        let res: (r: ITileResult) => void
+
+        const promise = new Promise<ITileResult>((_res) => {
+          res = _res
+        })
+        img.onload = () => {
+          texture.needsUpdate = true
+          res({ tile, texture })
+        }
         img.src = URL.createObjectURL(imageBlob)
-        return { tile, texture }
+        return promise
       })
   }
 }
