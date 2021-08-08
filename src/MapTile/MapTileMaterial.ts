@@ -29,35 +29,27 @@ export class MapTileMaterial extends ShaderMaterial {
         uTexture: { value: null },
         uTileSizeWorld: { value: new Vector2() },
         uTextureSize: {
-          value: new Vector4(
-            TEXTURE_SIZE,
-            1 / TEXTURE_SIZE,
-            (TEXTURE_SIZE - 1) / TEXTURE_SIZE,
-            0,
-          ),
+          value: new Vector4(0, 0, 1, 1),
         },
-        uTextureOffset: { value: new Vector3() },
+        uTextureOffset: { value: new Vector4() },
         uScreenSize: screenSizeUniform,
         uMaskTexture: maskUniform,
         uHeightRange: { value: new Vector2(0, 1) },
       },
       side: BackSide,
+      // wireframe: true,
     })
   }
-  getTextureOffset(): Vector3 {
-    return this.uniforms.uTextureOffset.value
-  }
-  setLevel(level: number) {
-    this.uniforms.uLevel.value = level
+  setTextureOffset(v: Vector4) {
+    this.uniforms.uTextureOffset.value.copy(v)
+    const ts = TEXTURE_SIZE / v.z
+    this.uniforms.uTextureSize.value.set(ts, 1 / ts, (ts - 1) / ts, 0)
   }
   setTexture(texture: Texture) {
     this.uniforms.uTexture.value = texture
   }
   getTexture() {
     return this.uniforms.uTexture.value
-  }
-  setHeightRange(min: number, max: number) {
-    this.uniforms.uHeightRange.value.set(min, max)
   }
   setTileSizeWorld(w: number, h: number) {
     this.uniforms.uTileSizeWorld.value.set(w, h)

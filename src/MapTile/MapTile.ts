@@ -1,4 +1,4 @@
-import { Mesh, Texture, Vector4, WebGLRenderTarget } from 'three'
+import { Mesh, Vector4, WebGLRenderTarget } from 'three'
 
 import { TEXTURE_SIZE } from '~/constants'
 import { SharedGeometry } from '~/Shared/SharedGeometry'
@@ -44,8 +44,8 @@ export class MapTile extends Mesh {
     this._tileTexture = texture
     this._material.setTexture(texture.texture!)
   }
-  getTextureOffset() {
-    return this._material.getTextureOffset()
+  setTextureOffset(v: Vector4) {
+    return this._material.setTextureOffset(v)
   }
   getTexture() {
     return this._tileTexture

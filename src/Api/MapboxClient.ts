@@ -47,8 +47,8 @@ class _MapboxClient {
         const img = new Image()
         const imageBlob = new Blob([data], { type: 'image/png' })
         const texture = new Texture(img)
-        texture.minFilter = NearestFilter
-        texture.magFilter = NearestFilter
+        // texture.minFilter = NearestFilter
+        // texture.magFilter = NearestFilter
         let res: (r: ITileResult) => void
 
         const promise = new Promise<ITileResult>((_res) => {

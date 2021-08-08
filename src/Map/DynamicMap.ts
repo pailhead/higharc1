@@ -6,9 +6,7 @@ import {
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
-  PlaneBufferGeometry,
   Scene,
-  ShaderMaterial,
   Vector3,
   Vector4,
   WebGLRenderTarget,
@@ -103,35 +101,13 @@ export class DynamicMap {
     const { renderer } = _viewer
     const visible = this._getIdealVisibleCells(bias)
     visible.sort(this._sortDistance)
-    // this._updateTiles(visible, maxCells)
     this._updateTiles2(visible, maxCells)
     this._updateInstances(visible, maxCells)
-
-    const renderMap: Map<number, MapTile[]> = new Map()
-    let maxLevel = 0
-    for (let i = 0; i < this._tileQueue.length; i++) {
-      const mapTile = this._tiles[i]
-      const tile = mapTile.getTile()!
-      maxLevel = Math.max(maxLevel, tile[2])
-      if (!renderMap.has(tile[2])) renderMap.set(tile[2], [])
-      renderMap.get(tile[2])!.push(mapTile)
-    }
 
     renderer.render(this._tileScene, _viewer.camera)
     while (this._tileQueue.length) this._tileQueue.shift()
 
     return visible
-  }
-
-  private _renderTileMask = (mapTile: MapTile) => {
-    const { _viewer, _maskMesh } = this
-    const { renderer, camera } = _viewer
-    const tile = mapTile.getTile()!
-
-    mapTile.updateMatrixWorld()
-    _maskMesh.matrixWorld.copy(mapTile.matrixWorld)
-    ;(_maskMesh.material as MeshBasicMaterial).color.r = tile[2] * INV_255
-    renderer.render(this._maskScene, camera)
   }
 
   /**
@@ -247,43 +223,50 @@ export class DynamicMap {
     while (i < this._tiles.length) this._tiles[i++].visible = false
   }
 
-  private _setupCell(cell: Cell, tileIndex: number) {
-    const { tile } = cell
-    const mapTile = this._tiles[tileIndex]
+  private _setupCell = (() => {
+    const WORK_VEC4 = new Vector4()
 
-    mapTile.setTile(tile)
-    mapTile.setSize(cell.size)
-    mapTile.visible = true
+    return (cell: Cell, tileIndex: number) => {
+      const { tile } = cell
+      const mapTile = this._tiles[tileIndex]
 
-    this._tileQueue.push(mapTile)
+      mapTile.setTile(tile)
+      mapTile.setSize(cell.size)
+      mapTile.visible = true
 
-    const ancestors = cell.getAncestors() ?? []
-    ancestors.push(cell)
+      this._tileQueue.push(mapTile)
 
-    const indices: number[] = []
-    const textureOffset = mapTile.getTextureOffset().set(0, 0, 1)
+      const ancestors = cell.getAncestors() ?? []
+      ancestors.push(cell)
 
-    if (!TextureResources.getTexture(tile)) TextureResources.createTexture(tile)
+      const indices: number[] = []
+      WORK_VEC4.set(0, 0, 1, 1)
 
-    while (ancestors.length) {
-      const c = ancestors.pop()!
-      const tileTexture = TextureResources.getTexture(c.tile)
-      if (tileTexture && !tileTexture.pending) {
-        tileTexture.setActive(true)
-        mapTile.setTexture(tileTexture)
-        const size = 1 << indices.length
-        textureOffset.z = 1 / size
+      if (!TextureResources.getTexture(tile))
+        TextureResources.createTexture(tile)
 
-        let d = 0
-        while (indices.length) {
-          const i = indices.pop()!
-          const f = 1 / (1 << ++d)
-          textureOffset.x += Cell.DIR[i].x * f
-          textureOffset.y += Cell.DIR[i].y * f
+      while (ancestors.length) {
+        const c = ancestors.pop()!
+        const tileTexture = TextureResources.getTexture(c.tile)
+        if (tileTexture && !tileTexture.pending) {
+          tileTexture.setActive(true)
+          mapTile.setTexture(tileTexture)
+          const size = 1 << indices.length
+          WORK_VEC4.w = size
+          WORK_VEC4.z = 1 / size
+
+          let d = 0
+          while (indices.length) {
+            const i = indices.pop()!
+            const f = 1 / (1 << ++d)
+            WORK_VEC4.x += Cell.DIR[i].x * f
+            WORK_VEC4.y += Cell.DIR[i].y * f
+          }
+          mapTile.setTextureOffset(WORK_VEC4)
+          return
         }
-        return
+        indices.push(c.index)
       }
-      indices.push(c.index)
     }
-  }
+  })()
 }

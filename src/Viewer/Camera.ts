@@ -26,7 +26,7 @@ export class Camera extends PerspectiveCamera {
   private _visibleArea = new VisibleAreaViz()
 
   constructor() {
-    super(60, 1, 1, 20000)
+    super(60, 1, 1, 40000)
     this.add(this._visibleArea)
     this._visibleArea.rotation.x = Math.PI
   }

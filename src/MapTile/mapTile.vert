@@ -1,14 +1,13 @@
 uniform sampler2D uTexture;
 uniform vec4 uTextureSize; //pixel size, inv pixel size, textureScale
 uniform vec2 uTileSizeWorld;
-uniform vec3 uTextureOffset;
+uniform vec4 uTextureOffset;
 
 varying vec2 vUv;
 varying vec3 vNormal;
 varying vec2 vWorldScreen;
 varying vec3 vEye;
 varying vec3 vViewPosition;
-varying float vDebug;
 
 const vec3 unpack = vec3(
   256.0 * 256.0 * 255.0,
@@ -29,7 +28,6 @@ float height(vec2 point){
 vec3 getNormal(vec2 point){
   float pxOffset = uTextureSize.y;
   
-  float h = height(point);
 
   float hl = height(vec2(point.x+pxOffset, point.y));
   float hr = height(vec2(point.x-pxOffset, point.y));
@@ -38,10 +36,10 @@ vec3 getNormal(vec2 point){
   float dzdx = hr - hl;
   float dzdy = ht - hb;
 
-  vec2 foo = uTileSizeWorld;
-  foo *= uTextureSize.y;
+  float z = uTileSizeWorld.x*uTextureOffset.w;
+  z *= uTextureSize.y;
 
-  return vec3(-dzdy,2.*uTileSizeWorld.x*uTextureSize.y,dzdx);
+  return vec3(-dzdy,2.*z,dzdx);
 }
 
 
@@ -52,7 +50,7 @@ void main (){
   _uv *= uTextureOffset.z; //2^n
   _uv += uTextureOffset.yx;
 
-  vec2 l = lookup(_uv.yx);
+  vec2 l = lookup(_uv);
   vUv = _uv;
   vNormal = getNormal(l);
   
@@ -61,17 +59,10 @@ void main (){
   vec4 pos = vec4(position,1.);
   pos = modelMatrix * pos;
   
-  mat4 pvMat = projectionMatrix * viewMatrix;
-
-  vec4 wp = pvMat * pos;
-  vWorldScreen = wp.xy / wp.w; 
-  vWorldScreen = vWorldScreen * 0.5 + 0.5;
-
-  // pos.y += h;
-  vDebug = h;
+  pos.y += h;
 
   vEye = pos.xyz - cameraPosition;
-  // vViewPosition = (viewMatrix * pos).xyz;
   vViewPosition = pos.xyz;
-  gl_Position = pvMat * pos;
+
+  gl_Position = projectionMatrix * viewMatrix * pos;
 }
