@@ -1,7 +1,7 @@
 uniform sampler2D uTexture;
 uniform vec4 uTextureSize; //pixel size, inv pixel size, textureScale
-uniform vec2 uHeightRange;
-uniform vec2 uTileSize;
+uniform vec2 uTileSizeWorld;
+uniform vec3 uTextureOffset;
 
 varying vec2 vUv;
 varying vec3 vNormal;
@@ -38,16 +38,22 @@ vec3 getNormal(vec2 point){
   float dzdx = hr - hl;
   float dzdy = ht - hb;
 
-  vec2 foo = uTileSize;
+  vec2 foo = uTileSizeWorld;
   foo *= uTextureSize.y;
 
-  return vec3(-dzdy,2.*uTileSize.x*uTextureSize.y,dzdx);
+  return vec3(-dzdy,2.*uTileSizeWorld.x*uTextureSize.y,dzdx);
 }
 
 
 void main (){
-  vec2 l = lookup(uv.yx);
-  vUv = l;
+
+  vec2 _uv = uv.yx;
+
+  _uv *= uTextureOffset.z; //2^n
+  _uv += uTextureOffset.yx;
+
+  vec2 l = lookup(_uv.yx);
+  vUv = _uv;
   vNormal = getNormal(l);
   
   float h = height(l);
@@ -61,7 +67,7 @@ void main (){
   vWorldScreen = wp.xy / wp.w; 
   vWorldScreen = vWorldScreen * 0.5 + 0.5;
 
-  pos.y += h;
+  // pos.y += h;
   vDebug = h;
 
   vEye = pos.xyz - cameraPosition;

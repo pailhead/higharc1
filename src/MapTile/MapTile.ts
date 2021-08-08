@@ -30,6 +30,7 @@ export class MapTile extends Mesh {
 
   setTile(tile: number[]) {
     this.userData.tile = tile
+    // this._material.setLevel(tile[2])
   }
   getTile(): number[] | null {
     return this.userData.tile ?? null
@@ -37,17 +38,17 @@ export class MapTile extends Mesh {
   setSize(size: Vector4) {
     this.position.set(size.x, 0, size.y)
     this.scale.set(size.z, 1, size.w)
-    this._material.setTileSize(size.z, size.w)
+    this._material.setTileSizeWorld(size.z, size.w)
   }
   setTexture(texture: TileTexture) {
     this._tileTexture = texture
     this._material.setTexture(texture.texture!)
   }
+  getTextureOffset() {
+    return this._material.getTextureOffset()
+  }
   getTexture() {
     return this._tileTexture
-  }
-  setLevel(level: number) {
-    this._material.setLevel(level)
   }
 }
 

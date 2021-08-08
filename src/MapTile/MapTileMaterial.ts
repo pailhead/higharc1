@@ -27,7 +27,7 @@ export class MapTileMaterial extends ShaderMaterial {
         },
         uLevel: { value: 0 },
         uTexture: { value: null },
-        uTileSize: { value: new Vector2() },
+        uTileSizeWorld: { value: new Vector2() },
         uTextureSize: {
           value: new Vector4(
             TEXTURE_SIZE,
@@ -36,12 +36,16 @@ export class MapTileMaterial extends ShaderMaterial {
             0,
           ),
         },
+        uTextureOffset: { value: new Vector3() },
         uScreenSize: screenSizeUniform,
         uMaskTexture: maskUniform,
         uHeightRange: { value: new Vector2(0, 1) },
       },
       side: BackSide,
     })
+  }
+  getTextureOffset(): Vector3 {
+    return this.uniforms.uTextureOffset.value
   }
   setLevel(level: number) {
     this.uniforms.uLevel.value = level
@@ -55,7 +59,7 @@ export class MapTileMaterial extends ShaderMaterial {
   setHeightRange(min: number, max: number) {
     this.uniforms.uHeightRange.value.set(min, max)
   }
-  setTileSize(w: number, h: number) {
-    this.uniforms.uTileSize.value.set(w, h)
+  setTileSizeWorld(w: number, h: number) {
+    this.uniforms.uTileSizeWorld.value.set(w, h)
   }
 }
