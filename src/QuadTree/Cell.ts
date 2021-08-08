@@ -19,6 +19,7 @@ const DIR = [
 ]
 
 export class Cell {
+  public static readonly DIR = DIR
   public readonly level: number
   public readonly size = new Vector4()
   public readonly center = new Vector2()
@@ -29,6 +30,7 @@ export class Cell {
 
   constructor(
     public readonly tile: number[],
+    public index: number,
     level: number,
     private _rootObject: Group,
   ) {
@@ -62,10 +64,10 @@ export class Cell {
     const children = getChildren(this.tile)
 
     this._children = [
-      new Cell(children[3], nextLevel, this._rootObject),
-      new Cell(children[0], nextLevel, this._rootObject),
-      new Cell(children[1], nextLevel, this._rootObject),
-      new Cell(children[2], nextLevel, this._rootObject),
+      new Cell(children[3], 0, nextLevel, this._rootObject),
+      new Cell(children[0], 1, nextLevel, this._rootObject),
+      new Cell(children[1], 2, nextLevel, this._rootObject),
+      new Cell(children[2], 3, nextLevel, this._rootObject),
     ]
     const wh = this.size.z * 0.5
     const hh = this.size.w * 0.5
